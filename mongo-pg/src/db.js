@@ -19,3 +19,10 @@ const allMovies = await movies.find().toArray();
 console.log("All movies in the collection:");
 console.log(allMovies);
 
+const deleteResult = await movies.deleteOne({ title: "Inception" });
+if (deleteResult.deletedCount === 1) {
+    console.log("Successfully deleted the movie.");
+} else {
+    console.log("No movie found to delete.");
+}
+
