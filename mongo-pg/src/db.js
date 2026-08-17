@@ -8,7 +8,7 @@ const db = client.db("movieDB");
 const movies = db.collection("movies");
 
 const result = await movies.insertOne({
-    title: "Inception",
+    title: "Interstellar",
     year: 2010,
     rating: 8.8
 });
@@ -19,7 +19,7 @@ const allMovies = await movies.find().toArray();
 console.log("All movies in the collection:");
 console.log(allMovies);
 
-const deleteResult = await movies.deleteOne({ title: "Inception" });
+const deleteResult = await movies.deleteMany({ title: "Intersteallar" });
 if (deleteResult.deletedCount === 1) {
     console.log("Successfully deleted the movie.");
 } else {
