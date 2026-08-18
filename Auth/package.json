@@ -4,6 +4,7 @@
     "connect-redis": "^9.0.0",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.2",
     "redis": "^6.2.1"
   }
