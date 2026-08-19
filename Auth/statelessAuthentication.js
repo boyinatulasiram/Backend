@@ -117,7 +117,7 @@ function authMiddleware(req, res, next) {
 }
 
 
-// PROTECTED ROUTE
+        *// PROTECTED ROUTE
 app.get("/profile", authMiddleware, async (req, res) => {
     const userId = req.user.userId;
 
@@ -133,6 +133,11 @@ app.get("/profile", authMiddleware, async (req, res) => {
         username: user.username
     });
 });
+
+
+app.post("/logout", async(req,res)=>{
+    console.log("logout request");
+})
 
 
 app.listen(3000, () => {
