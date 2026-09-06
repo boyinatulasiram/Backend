@@ -1,30 +1,54 @@
 // auth using oauth
+
 import express from "express";
- import "dotenv/config";
+import "dotenv/config";
+import axios from "axios";
 
- const app = express();
-
-
+const app = express();
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL;
 
- app.get("/auth/google",(req,res)=>{
-    const googleAuthURL = "https://accounts.google.com/o/oauth2/v2/auth?" +
+
+// ============================
+// STEP 1: SEND USER TO GOOGLE
+// ============================
+
+app.get("/auth/google", (req, res) => {
+
+    const googleAuthURL =
+        "https://accounts.google.com/o/oauth2/v2/auth?" +
         new URLSearchParams({
             client_id: GOOGLE_CLIENT_ID,
             redirect_uri: GOOGLE_CALLBACK_URL,
             response_type: "code",
             scope: "openid email profile"
         });
+
     res.redirect(googleAuthURL);
- });
+});
 
 
+// ==================================
+// STEP 2: RECEIVE GOOGLE AUTH CODE
+// ==================================
 
- app.get("/auth/google/callback", async (req,res)=>{
+app.get("/auth/google/callback", async (req, res) => {
+
+    const { code } = req.query;
+
+    if (!code) {
+        return res.status(400).json({
+            message: "Authorization code missing"
+        });
+    }
+
     try {
+
+        // ==================================
+        // STEP 3: EXCHANGE CODE FOR TOKENS
+        // ==================================
 
         const response = await axios.post(
             "https://oauth2.googleapis.com/token",
@@ -58,13 +82,9 @@ const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL;
             message: "Token exchange failed"
         });
     }
- });
+});
 
 
-
- app.listen(8080,()=>{
+app.listen(8080, () => {
     console.log("Server running on port 8080");
- });
-
-
-//ouath 2 update
+});
