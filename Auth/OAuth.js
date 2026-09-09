@@ -3,6 +3,7 @@
 import express from "express";
 import "dotenv/config";
 import axios from "axios";
+import { OAuth2Client } from "google-auth-library";
 
 const app = express();
 
@@ -10,6 +11,7 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL;
 
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // ============================
 // STEP 1: SEND USER TO GOOGLE
@@ -35,53 +37,48 @@ app.get("/auth/google", (req, res) => {
 // ==================================
 
 app.get("/auth/google/callback", async (req, res) => {
+  const { code } = req.query;
 
-    const { code } = req.query;
+  try {
+    // 1. Exchange authorization code for tokens
+    const response = await axios.post(
+      "https://oauth2.googleapis.com/token",
+      new URLSearchParams({
+        code,
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        redirect_uri: GOOGLE_CALLBACK_URL,
+        grant_type: "authorization_code"
+      }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      }
+    );
 
-    if (!code) {
-        return res.status(400).json({
-            message: "Authorization code missing"
-        });
-    }
+    // 2. Get ID token
+    const idToken = response.data.id_token;
 
-    try {
+    // 3. Verify ID token
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: GOOGLE_CLIENT_ID
+    });
 
-        // ==================================
-        // STEP 3: EXCHANGE CODE FOR TOKENS
-        // ==================================
+    // 4. Get trusted user information
+    const payload = ticket.getPayload();
 
-        const response = await axios.post(
-            "https://oauth2.googleapis.com/token",
+    console.log(payload);
 
-            new URLSearchParams({
-                code: code,
-                client_id: GOOGLE_CLIENT_ID,
-                client_secret: GOOGLE_CLIENT_SECRET,
-                redirect_uri: GOOGLE_CALLBACK_URL,
-                grant_type: "authorization_code"
-            }),
+    res.json(payload);
 
-            {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                }
-            }
-        );
-
-        console.log(response.data);
-
-        res.json(response.data);
-
-    } catch (error) {
-
-        console.error(
-            error.response?.data || error.message
-        );
-
-        res.status(500).json({
-            message: "Token exchange failed"
-        });
-    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Authentication failed"
+    });
+  }
 });
 
 
